@@ -1,6 +1,6 @@
 import unittest
 
-from tic_lab.controller import build_payload, model_state
+from tic_lab.controller import build_payload, model_state, validate_probabilities
 from tic_lab.game import TicTacToe
 
 
@@ -42,6 +42,13 @@ class TicTacToeTests(unittest.TestCase):
         prompt = model_state(game.snapshot(), "minimal").lower()
         self.assertNotIn("occupied", prompt)
         self.assertNotIn("cannot be played", prompt)
+
+    def test_probability_rounding_is_normalized_without_dropping_a_cell(self):
+        keys = {action["id"] for action in TicTacToe().all_actions()}
+        rounded = {key: 0.11 for key in keys}
+        normalized = validate_probabilities(rounded, keys)
+        self.assertEqual(set(normalized), keys)
+        self.assertAlmostEqual(sum(normalized.values()), 1.0)
 
 
 if __name__ == "__main__":

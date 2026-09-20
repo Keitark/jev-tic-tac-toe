@@ -40,9 +40,13 @@ def validate_probabilities(probabilities, keys: set[str]) -> dict[str, float]:
         raise ProviderError("Probabilities must cover exactly all nine cells.")
     if any(type(v) not in (int, float) or not math.isfinite(v) or not 0 <= v <= 1 for v in probabilities.values()):
         raise ProviderError("Probabilities must be finite numbers in [0, 1].")
-    if abs(sum(probabilities.values()) - 1.0) > 0.005:
+    total = sum(probabilities.values())
+    # Jev sometimes returns two-decimal probabilities whose rounded sum is
+    # 0.99 or 1.01. Keep the nine-way contract strict, but normalize only
+    # this small presentation-rounding drift before recording the decision.
+    if total <= 0 or abs(total - 1.0) > 0.02:
         raise ProviderError("Probabilities do not sum to one.")
-    return {k: float(v) for k, v in probabilities.items()}
+    return {k: float(v) / total for k, v in probabilities.items()}
 
 
 def board_text(board: list[str]) -> str:
