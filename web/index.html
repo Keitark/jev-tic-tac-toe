@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Jev × Tic-Tac-Toe</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="layout">
+    <section class="panel controls">
+      <h1>Jev × Tic-Tac-Toe</h1>
+      <p class="lead">3×3盤面をそのまま渡し、Jevには毎回9マス全部を候補として見せます。</p>
+
+      <label>X controller
+        <select id="controller-x">
+          <option value="human">Human</option>
+          <option value="jev">Jev</option>
+          <option value="openrouter">OpenRouter Jev</option>
+          <option value="random">Random</option>
+        </select>
+      </label>
+      <label>O controller
+        <select id="controller-o">
+          <option value="human">Human</option>
+          <option value="jev" selected>Jev</option>
+          <option value="openrouter">OpenRouter Jev</option>
+          <option value="random">Random</option>
+        </select>
+      </label>
+      <label>Prompt
+        <select id="prompt-mode">
+          <option value="minimal" selected>Minimal — standard tic-tac-toe only</option>
+          <option value="explicit">Explicit — rules spelled out</option>
+        </select>
+      </label>
+      <label>Seed <input id="seed" type="number" min="0" value="17"></label>
+      <label>Auto interval (s) <input id="interval" type="number" min="0.1" max="10" step="0.1" value="0.6"></label>
+
+      <div class="buttons">
+        <button id="new">New game</button>
+        <button id="step">AI step</button>
+        <button id="play">Play</button>
+        <button id="pause">Pause</button>
+      </div>
+
+      <div id="keys" class="note"></div>
+      <div id="error" class="error"></div>
+    </section>
+
+    <section class="center">
+      <div class="statusbar">
+        <strong id="turn">Turn: X</strong>
+        <span id="result">In progress</span>
+      </div>
+      <div id="board" class="board" aria-label="tic tac toe board"></div>
+      <div class="legend">Each cell shows the model probability from the last AI decision. Occupied cells remain candidates.</div>
+    </section>
+
+    <section class="panel metrics">
+      <h2>Decision observatory</h2>
+      <div class="metric-grid">
+        <div><span>AI decisions</span><strong id="m-decisions">0</strong></div>
+        <div><span>Illegal</span><strong id="m-illegal">0</strong></div>
+        <div><span>Illegal rate</span><strong id="m-illegal-rate">0%</strong></div>
+        <div><span>Optimal / legal</span><strong id="m-optimal-rate">0%</strong></div>
+      </div>
+
+      <h3>Last decision</h3>
+      <div id="last" class="last">No AI decision yet.</div>
+
+      <h3>Minimax oracle</h3>
+      <div id="oracle" class="oracle"></div>
+
+      <h3>History</h3>
+      <div id="history" class="history"></div>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>
