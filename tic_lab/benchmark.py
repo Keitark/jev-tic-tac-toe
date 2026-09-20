@@ -260,20 +260,24 @@ def run_benchmark(
 
 
 def write_json(path: str, results: list[GameResult], summary: dict, args: argparse.Namespace) -> None:
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "format": "jev-tic-tac-toe-benchmark/v1",
         "config": vars(args),
         "summary": summary,
         "games": [asdict(r) for r in results],
     }
-    Path(path).write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    target.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def write_csv(path: str, results: list[GameResult]) -> None:
     rows = [asdict(r) for r in results]
     if not rows:
         return
-    with Path(path).open("w", newline="", encoding="utf-8") as stream:
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with target.open("w", newline="", encoding="utf-8") as stream:
         writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
