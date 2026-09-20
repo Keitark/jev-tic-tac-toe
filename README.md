@@ -90,6 +90,8 @@ CLIは途中経過と最終結果として以下を出します。
 
 exact binomial testは引き分けを除いたdecisive gamesについて、帰無仮説 `P(win)=P(loss)=0.5` を検定します。ゲーム数だけでなく、X/O別成績・illegal率・optimal率も併記して解釈してください。
 
+実行済みの1000局結果は [RESULTS.md](RESULTS.md) にあります。
+
 ## 9候補を常に固定
 
 Jevへのchoice criteriaは常に以下の9個です。
