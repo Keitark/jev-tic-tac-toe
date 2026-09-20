@@ -36,6 +36,60 @@ MODEL_TIMEOUT=30
 
 Jevは `POST https://api.typesafe.ai/v1/systemone`、OpenRouterは `POST https://openrouter.ai/api/alpha/decisions` を使います。Rogue版 `jev-rogue` と同じ `state/questions` 形式です。
 
+## Headless benchmark
+
+ブラウザなしで大量対局できます。X/Oの先後差を避けるため、対象モデルはゲームごとにX/Oを交互に担当します。1000局なら **X=500局 / O=500局** です。
+
+### 1. Rule understanding + strategy
+
+JevもRandomも**9マス全部**から選びます。occupiedを選んだらそのゲームを即負けにするstrict benchmarkです。
+
+```bash
+python headless.py \
+  --games 1000 \
+  --player jev \
+  --opponent random \
+  --prompt minimal \
+  --illegal-policy forfeit \
+  --json results/jev-vs-random-strict.json \
+  --csv results/jev-vs-random-strict.csv
+```
+
+この比較では、Randomもoccupiedを選び得ます。したがって勝率には**ルール理解能力と戦略能力の両方**が反映されます。
+
+### 2. Strategy-only baseline
+
+比較相手を `legal-random` にすると、Random側は空きマスだけから一様に選びます。Jevがillegalを出しても同じ手番で再試行させることで、勝敗では主に戦略差を見ます。
+
+```bash
+python headless.py \
+  --games 1000 \
+  --player jev \
+  --opponent legal-random \
+  --prompt minimal \
+  --illegal-policy retry \
+  --json results/jev-vs-legal-random.json \
+  --csv results/jev-vs-legal-random.csv
+```
+
+`retry` は同一手番でillegalが続く可能性があるため、デフォルトで20回連続illegalになるとそのゲームをforfeitします。`--max-illegal-streak` で変更できます。
+
+### 出力統計
+
+CLIは途中経過と最終結果として以下を出します。
+
+- W / D / L
+- **score rate** = (W + 0.5 × D) / games
+- **decisive win rate** = W / (W + L)
+- decisive win rateの95% Wilson interval
+- **one-sided exact binomial p-value**: 勝ちが負けより多いという優位性検定
+- two-sided exact binomial p-value
+- subject illegal rate
+- subject optimal / legal rate
+- X担当時 / O担当時の別集計
+
+exact binomial testは引き分けを除いたdecisive gamesについて、帰無仮説 `P(win)=P(loss)=0.5` を検定します。ゲーム数だけでなく、X/O別成績・illegal率・optimal率も併記して解釈してください。
+
 ## 9候補を常に固定
 
 Jevへのchoice criteriaは常に以下の9個です。
@@ -54,7 +108,7 @@ X . O
 O . .
 ```
 
-でも `(0,0)`, `(0,2)`, `(1,1)`, `(2,0)` を候補から消しません。Jevがそこを選べば **illegal** と記録し、盤面と手番は進めません。
+でも `(0,0)`, `(0,2)`, `(1,1)`, `(2,0)` を候補から消しません。Jevがそこを選べば **illegal** と記録し、GUIでは盤面と手番は進めません。
 
 ## Prompt mode
 
@@ -97,7 +151,7 @@ Human vs Jev、Jev vs Random、Jev self-playなどを同じ画面で試せます
 python -m unittest discover -s tests -v
 ```
 
-テストでは「occupiedを含めて常に9候補」「illegalで手番が進まない」「minimax即勝ち検出」「Minimal promptがoccupied ruleを明示しない」を確認しています。
+テストでは「occupiedを含めて常に9候補」「illegalで手番が進まない」「minimax即勝ち検出」「Minimal promptがoccupied ruleを明示しない」に加えて、headlessのX/O均等化、legal-random、統計計算を確認します。
 
 ## 実験で見る値
 
@@ -105,6 +159,7 @@ python -m unittest discover -s tests -v
 - **Optimal / legal** = minimax optimal legal choices / legal AI choices
 - 各9マスに対するJev probability
 - 勝敗
+- X/O別成績
 - 同一盤面を回転・反転させた symmetry consistency（今後の拡張候補）
 
 このリポジトリは、TetrisやRogueより小さく、全状態を完全解析できる「Jevの2D判断の最小ベンチマーク」として使うことを狙っています。
